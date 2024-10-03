@@ -42,6 +42,19 @@ func main() {
 		panic(err)
 	}
 	e.Use(oapiMiddleware.OapiRequestValidator(swagger))
+
+	// CORSの設定
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		// アクセスを許可するオリジンを指定
+		AllowOrigins:     []string{"http://localhost:3000"},
+		// アクセスを許可するメソッドを指定
+		AllowMethods:     []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+		// アクセスを許可するヘッダーを指定
+		AllowHeaders:     []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-CSRF-Header"},
+		// cookieを使う場合はtrue。後々cookieを使うつもりなのでtrueに。
+		AllowCredentials: true,
+	}))
+
 	// ロガーのミドルウェアを設定
 	e.Use(middleware.Logger())
 	// APIがエラーで落ちてもリカバーするミドルウェアを設定
