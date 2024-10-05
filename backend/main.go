@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"go-open-api/controller"
+	"go-open-api/db"
 	oapi "go-open-api/generated"
 	"net/http"
 
@@ -16,9 +18,11 @@ type apiController struct{}
 // OpenAPI で定義された (GET /users) の実装
 func (a apiController) GetUser(ctx echo.Context) error {
 	// OpenApi で生成された User モデルを使ってレスポンスを返す
+	users := controller.GetUsers(ctx)
+	user := users[0]
 	return ctx.JSON(http.StatusOK, &oapi.User{
-		Id:   1,
-		Name: "Taro Yamada",
+		Id:   int(user.ID),
+		Name: user.Name,
 	})
 }
 
@@ -35,6 +39,10 @@ func (a apiController) PostUser(ctx echo.Context) error {
 func main() {
 	// Echo のインスタンス作成
 	e := echo.New()
+
+	// DB 接続
+	db, _ := db.DB.DB()
+	defer db.Close()
 
 	// OpenApi 仕様に沿ったリクエストかバリデーションをするミドルウェアを設定
 	swagger, err := oapi.GetSwagger()
@@ -66,5 +74,6 @@ func main() {
 
 	// 8080ポートで Echo サーバ起動
 	e.Logger.Fatal(e.Start(":8080"))
+
 }
 
