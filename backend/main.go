@@ -9,8 +9,11 @@ import (
 
 	oapiMiddleware "github.com/deepmap/oapi-codegen/pkg/middleware"
 
+	"context"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/redis/go-redis/v9"
 )
 
 type apiController struct{}
@@ -37,12 +40,30 @@ func (a apiController) PostUser(ctx echo.Context) error {
 }
 
 func main() {
+	var ctx = context.Background()
+
 	// Echo のインスタンス作成
 	e := echo.New()
 
 	// DB 接続
 	db, _ := db.DB.DB()
 	defer db.Close()
+
+	// redis 接続
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+		PoolSize: 1000,
+	})
+
+	ret, err := rdb.Get(ctx, "sample_key_1").Result()
+	if err != nil {
+		println("Error: ", err)
+		return
+	}
+
+	fmt.Println(ret)
 
 	// OpenApi 仕様に沿ったリクエストかバリデーションをするミドルウェアを設定
 	swagger, err := oapi.GetSwagger()
